@@ -13,7 +13,11 @@ namespace MultiTenancy {
 
     public string TenantHostname {
       get {
-        return _httpContext?.Request?.Headers?[Config.TenantKey];
+        try {
+          return _httpContext.Request.Headers[Config.TenantKey];
+        } catch {
+          throw HttpException.BadRequest("Can not find tenant hostname in the request header");
+        }
       }
     }
   }

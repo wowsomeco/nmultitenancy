@@ -7,6 +7,6 @@ namespace MultiTenancy {
   }
 
   public interface ITenantScopedEntity : IEntity {
-    string TenantId { get; }
+    string TenantId { get; set; }
   }
 }

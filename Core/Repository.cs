@@ -10,18 +10,15 @@ namespace MultiTenancy {
   public delegate bool InsertCondition<TEntity>(TEntity entity);
   public delegate void UpdateCallback<TEntity>(TEntity entity);
 
-  public interface ITenantRepository<TEntity, TDbContext>
-  where TEntity : class where TDbContext : TenantDbContext {
-    DbSet<TEntity> Table { get; }
-    Task<List<TEntity>> GetAll();
-    Task<TEntity> GetOne(Expression<Func<TEntity, bool>> predicate, Func<string> onNotFound);
-    Task<TEntity> Insert(TEntity model, InsertCondition<TEntity> condition = null);
-    Task<TEntity> Update(Func<TEntity, bool> predicate, UpdateCallback<TEntity> callback, Func<string> notFound);
-    Task<bool> Delete(int id);
-  }
-
+  /// <summary>
+  /// The Tenant Repository.
+  /// </summary>
+  /// <example>
+  /// <code>
+  /// </code>
+  /// </example>
   public class TenantRepository<TEntity, TDbContext>
-  : ITenantRepository<TEntity, TDbContext> where TEntity : class, IEntity where TDbContext : TenantDbContext {
+  where TEntity : class, IEntity where TDbContext : TenantDbContext {
     private TenantDbContext _context = null;
     private DbSet<TEntity> _table = null;
 
@@ -36,22 +33,33 @@ namespace MultiTenancy {
       _table = _context.Set<TEntity>();
     }
 
-    public Task<List<TEntity>> GetAll() {
-      return _table.ToListAsync();
-    }
-
-    public Task<TEntity> GetOne(Expression<Func<TEntity, bool>> predicate, Func<string> onNotFound) {
-      var entity = _table.FirstOrDefaultAsync(predicate);
-
-      if (null == entity) {
-        throw HttpException.NotExists(onNotFound());
+    public async Task<List<T>> GetAll<T>(Func<TEntity, T> transformer, params Expression<Func<TEntity, bool>>[] filters) {
+      if (null != filters) {
+        foreach (var filter in filters) {
+          _table.Where(filter);
+        }
       }
 
-      return entity;
+      var entities = await _table.ToListAsync();
+      return entities.Map(e => transformer(e));
+    }
+
+    public async Task<T> GetOne<T>(Expression<Func<TEntity, bool>> predicate, Func<TEntity, T> callback, Func<string> onNotFound) {
+      var entity = await _table.FirstOrDefaultAsync(predicate) ?? throw HttpException.NotExists(onNotFound());
+      return callback(entity);
     }
 
     public async Task<TEntity> Insert(TEntity model, InsertCondition<TEntity> condition = null) {
       condition?.Invoke(model);
+
+      // check if the current entity is a scoped entity.
+      // automagically assign the tenant id if so
+      // TODO: find a way to handle hostname not found... 
+      // right now the error is thrown directly from Postgres i.e. 23503 (foreign_key_violation)
+      // which can be confusing...
+      model.TryCastTo<TEntity, ITenantScopedEntity>(scoped => {
+        scoped.TenantId = _context.AppContext.TenantHostname;
+      });
 
       _table.Add(model);
       await Save();
@@ -59,12 +67,8 @@ namespace MultiTenancy {
       return model;
     }
 
-    public async Task<TEntity> Update(Func<TEntity, bool> predicate, UpdateCallback<TEntity> callback, Func<string> onErr) {
-      var entity = _table.Where(predicate).FirstOrDefault();
-
-      if (null == entity) {
-        throw HttpException.NotExists(onErr());
-      }
+    public async Task<TEntity> Update(Expression<Func<TEntity, bool>> predicate, UpdateCallback<TEntity> callback, Func<string> onErr) {
+      var entity = await GetOne(predicate, e => e, onErr);
 
       callback(entity);
       _table.Attach(entity);

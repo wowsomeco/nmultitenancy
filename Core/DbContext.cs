@@ -12,15 +12,17 @@ namespace MultiTenancy {
   public class TenantDbContext : DbContext {
     protected readonly int _tenantId = -1;
 
-    private readonly ApplicationContext _appContext;
+    public ApplicationContext AppContext {
+      get; private set;
+    }
 
     protected TenantDbContext(DbContextOptions options, ApplicationContext appContext) : base(options) {
-      _appContext = appContext;
+      AppContext = appContext;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       // Configure default schema
-      modelBuilder.HasDefaultSchema(_appContext.Config.DbSchema);
+      modelBuilder.HasDefaultSchema(AppContext.Config.DbSchema);
       // set default value for created_at as well as updated_at
       modelBuilder.EntitiesOfType<IEntity>(b => {
         b.Property<DateTimeOffset>(nameof(IEntity.CreatedAt)).HasDefaultValueSql("now()");
@@ -30,7 +32,7 @@ namespace MultiTenancy {
       // so that when it gets queried, it only returns the entity for the particular tenant
       // TODO: create a generic stuff of this for better reusability.
       var baseFilter = (Expression<Func<IEntity, bool>>)(_ => false);
-      var tenantFilter = (Expression<Func<ITenantScopedEntity, bool>>)(e => e.TenantId == _appContext.TenantHostname);
+      var tenantFilter = (Expression<Func<ITenantScopedEntity, bool>>)(e => e.TenantId == AppContext.TenantHostname);
       var clrTypes = modelBuilder.Model.GetEntityTypes().Select(et => et.ClrType).ToList();
       foreach (var type in clrTypes) {
         var filters = new List<LambdaExpression>();

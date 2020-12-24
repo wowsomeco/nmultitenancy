@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +23,10 @@ namespace MultiTenancy {
 
     public static HttpException NotExists(string msg) {
       return new HttpException(HttpStatusCode.NotFound, $"{msg} does not exist in the database");
+    }
+
+    public static HttpException BadRequest(string msg) {
+      return new HttpException(HttpStatusCode.BadRequest, msg);
     }
   }
 
