@@ -1,6 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -17,14 +17,27 @@ namespace MultiTenancy {
     }
 
     public HttpException(HttpStatusCode code) : this(code, code.ToString()) { }
+
+    public static HttpException AlreadyExists(string msg) {
+      return new HttpException(HttpStatusCode.Conflict, $"{msg} already exists in the database");
+    }
+
+    public static HttpException NotExists(string msg) {
+      return new HttpException(HttpStatusCode.NotFound, $"{msg} does not exist in the database");
+    }
   }
 
+  /// <summary>
+  /// Catches any Exception and returns it as a json response body.
+  /// </summary>
   public class ExceptionMiddleware {
     private readonly RequestDelegate _next;
+    private readonly AppConfig _appConfig;
 
-    public ExceptionMiddleware(RequestDelegate next) {
+    public ExceptionMiddleware(RequestDelegate next, AppConfig appConfig) {
       // TODO: Inject ILogger
       _next = next;
+      _appConfig = appConfig;
     }
 
     public async Task InvokeAsync(HttpContext httpContext) {
@@ -37,13 +50,20 @@ namespace MultiTenancy {
     }
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception) {
+      Console.WriteLine(exception);
+
+      string msg = exception.Message;
+
+      context.Response.ContentType = "application/json";
       context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
+      HttpException httpException = exception as HttpException;
+      if (null != httpException) {
+        context.Response.StatusCode = httpException.StatusCode;
+      }
+
       return context.Response.WriteAsync(
-        JsonSerializer.Serialize(new {
-          StatusCode = context.Response.StatusCode,
-          Message = exception.Message
-        })
+        _appConfig.AppOptions.ErrFormat(msg)
       );
     }
   }

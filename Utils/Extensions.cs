@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,6 +16,15 @@ namespace MultiTenancy {
           buildAction(modelBuilder.Entity(entityType.ClrType));
 
       return modelBuilder;
+    }
+
+    public static bool AlreadyExists<T>(this DbSet<T> dbset, Func<T, bool> predicate) where T : class {
+      int count = dbset.Where(predicate).Count();
+      return count > 0;
+    }
+
+    public static bool IfNotExists<T>(this DbSet<T> dbset, Func<T, bool> predicate) where T : class {
+      return !dbset.AlreadyExists(predicate);
     }
   }
 

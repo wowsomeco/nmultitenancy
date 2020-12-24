@@ -1,58 +1,90 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace MultiTenancy {
-  public interface ITenantRepository<T, U> {
-    Task<List<T>> GetAll();
-    Task<T> GetById(int id);
-    Task<int> Insert(T model);
-    Task<int> Update(T model);
-    Task<int> Delete(int id);
+  public delegate bool InsertCondition<TEntity>(TEntity entity);
+  public delegate void UpdateCallback<TEntity>(TEntity entity);
+
+  public interface ITenantRepository<TEntity, TDbContext>
+  where TEntity : class where TDbContext : TenantDbContext {
+    DbSet<TEntity> Table { get; }
+    Task<List<TEntity>> GetAll();
+    Task<TEntity> GetOne(Expression<Func<TEntity, bool>> predicate, Func<string> onNotFound);
+    Task<TEntity> Insert(TEntity model, InsertCondition<TEntity> condition = null);
+    Task<TEntity> Update(Func<TEntity, bool> predicate, UpdateCallback<TEntity> callback, Func<string> notFound);
+    Task<bool> Delete(int id);
   }
 
-  public class TenantRepository<T, U>
-  : ITenantRepository<T, U> where T : class where U : TenantDbContext {
+  public class TenantRepository<TEntity, TDbContext>
+  : ITenantRepository<TEntity, TDbContext> where TEntity : class, IEntity where TDbContext : TenantDbContext {
     private TenantDbContext _context = null;
-    private DbSet<T> _table = null;
+    private DbSet<TEntity> _table = null;
 
-    public TenantRepository(U ctx) {
-      _context = ctx;
-      _table = _context.Set<T>();
+    public DbSet<TEntity> Table {
+      get {
+        return _table;
+      }
     }
 
-    public Task<List<T>> GetAll() {
+    public TenantRepository(TDbContext ctx) {
+      _context = ctx;
+      _table = _context.Set<TEntity>();
+    }
+
+    public Task<List<TEntity>> GetAll() {
       return _table.ToListAsync();
     }
 
-    public async Task<T> GetById(int id) {
-      var item = await _table.FindAsync(id);
-      if (item == null) {
-        throw new HttpException(HttpStatusCode.NotFound, $"id = {id} does not exist in {typeof(T).Name}");
+    public Task<TEntity> GetOne(Expression<Func<TEntity, bool>> predicate, Func<string> onNotFound) {
+      var entity = _table.FirstOrDefaultAsync(predicate);
+
+      if (null == entity) {
+        throw HttpException.NotExists(onNotFound());
       }
 
-      return item;
+      return entity;
     }
 
-    public Task<int> Insert(T model) {
+    public async Task<TEntity> Insert(TEntity model, InsertCondition<TEntity> condition = null) {
+      condition?.Invoke(model);
+
       _table.Add(model);
-      return Save();
+      await Save();
+
+      return model;
     }
 
-    public Task<int> Update(T model) {
-      _table.Attach(model);
-      return Save();
+    public async Task<TEntity> Update(Func<TEntity, bool> predicate, UpdateCallback<TEntity> callback, Func<string> onErr) {
+      var entity = _table.Where(predicate).FirstOrDefault();
+
+      if (null == entity) {
+        throw HttpException.NotExists(onErr());
+      }
+
+      callback(entity);
+      _table.Attach(entity);
+
+      await Save();
+      return entity;
     }
 
-    public Task<int> Delete(int id) {
-      T t = _table.Find(id);
+    public async Task<bool> Delete(int id) {
+      TEntity t = _table.Find(id);
       _table.Remove(t);
-      return Save();
+      return await Save() > 0;
     }
 
-    public Task<int> Save() {
-      return _context.SaveChangesAsync();
+    public async Task<int> Save() {
+      try {
+        return await _context.SaveChangesAsync();
+      } catch (Exception e) {
+        throw new HttpException(HttpStatusCode.BadRequest, e.InnerException.Message);
+      }
     }
   }
 }
