@@ -7,11 +7,12 @@ using Microsoft.EntityFrameworkCore.Query;
 
 namespace MultiTenancy {
   /// <summary>
-  /// The Tenant DB Context.  
+  /// The Tenant DB Context.
+  /// This sets query filter for all the tables that inherit ITenantScopedEntity by AppContext.TenantHostname
+  /// Subclass this and create your own DbContext accordingly.
+  ///   
   /// </summary>
   public class TenantDbContext : DbContext {
-    protected readonly int _tenantId = -1;
-
     public ApplicationContext AppContext {
       get; private set;
     }

@@ -19,6 +19,13 @@ namespace MultiTenancy {
       return modelBuilder;
     }
 
+    public static void GetEntity<T>(this ModelBuilder b, params Action<EntityTypeBuilder<T>>[] callbacks) where T : class {
+      var t = b.Entity<T>();
+      foreach (var c in callbacks) {
+        c(t);
+      }
+    }
+
     public static bool AlreadyExists<T>(this DbSet<T> dbset, Func<T, bool> predicate) where T : class {
       int count = dbset.Where(predicate).Count();
       return count > 0;

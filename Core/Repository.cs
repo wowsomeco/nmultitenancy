@@ -12,14 +12,17 @@ namespace MultiTenancy {
 
   /// <summary>
   /// The Tenant Repository.
+  /// TODO: more docs
   /// </summary>
   /// <example>
   /// <code>
+  /// public void ConfigureServices(IServiceCollection services) {
+  ///   services.AddTransient(typeof(TenantRepository));  
+  /// }  
   /// </code>
   /// </example>
   public class TenantRepository<TEntity, TDbContext>
   where TEntity : class, IEntity where TDbContext : TenantDbContext {
-    private TenantDbContext _context = null;
     private DbSet<TEntity> _table = null;
 
     public DbSet<TEntity> Table {
@@ -28,38 +31,59 @@ namespace MultiTenancy {
       }
     }
 
+    public TenantDbContext Context { get; init; }
+
+    public Func<IQueryable<TEntity>, IQueryable<TEntity>> BeforeQuery { get; set; }
+
     public TenantRepository(TDbContext ctx) {
-      _context = ctx;
-      _table = _context.Set<TEntity>();
+      Context = ctx;
+      _table = Context.Set<TEntity>();
     }
 
-    public async Task<List<T>> GetAll<T>(Func<TEntity, T> transformer, params Expression<Func<TEntity, bool>>[] filters) {
-      if (null != filters) {
-        foreach (var filter in filters) {
-          _table.Where(filter);
-        }
-      }
-
-      var entities = await _table.ToListAsync();
+    /// <summary>
+    /// Gets all the entities that matches the query filters.
+    /// If no filters are defined, it will get all the entities from the database 
+    /// </summary>
+    /// <param name="transformer">The callback that transforms the original entity into TResult</param>
+    /// <param name="filters">The query filter(s)</param>
+    /// <typeparam name="TResult">The class that you want to transform entity into</typeparam>
+    /// <returns>The list of TResult</returns>
+    public async Task<List<TResult>> GetAll<TResult>(Func<TEntity, TResult> transformer, params Expression<Func<TEntity, bool>>[] filters) {
+      var q = GenerateQuery(filters);
+      var entities = await q.ToListAsync();
       return entities.Map(e => transformer(e));
     }
 
-    public async Task<T> GetOne<T>(Expression<Func<TEntity, bool>> predicate, Func<TEntity, T> callback, Func<string> onNotFound) {
-      var entity = await _table.FirstOrDefaultAsync(predicate) ?? throw HttpException.NotExists(onNotFound());
-      return callback(entity);
+    /// <summary>
+    /// Gets one row from the database and transforms it into TResult
+    /// </summary>
+    /// <param name="transformer">The callback that transforms the original entity into T</param>
+    /// <param name="onNotFound">The message that gets thrown when the entity does not exist in the db</param>
+    /// <param name="filters">The query filter(s)</param>
+    /// <typeparam name="TResult">The class that you want to transform entity into</typeparam>
+    /// <returns>TResult</returns>
+    public async Task<TResult> GetOne<TResult>(Func<TEntity, TResult> transformer, Func<string> onNotFound, params Expression<Func<TEntity, bool>>[] filters) {
+      var q = GenerateQuery(filters);
+
+      var entity = await q.FirstOrDefaultAsync() ?? throw HttpException.NotExists(onNotFound());
+      return transformer(entity);
     }
 
+    /// <summary>
+    /// Inserts a new entity to the database
+    /// </summary>
+    /// <param name="model">The entity to insert</param>
+    /// <param name="condition">The condition that gets called prior to inserting, if returns false, it wont proceed and returns null immediately</param>
+    /// <returns>The newly inserted entity</returns>
     public async Task<TEntity> Insert(TEntity model, InsertCondition<TEntity> condition = null) {
-      condition?.Invoke(model);
-
+      bool shouldInsert = null != condition ? condition.Invoke(model) : true;
+      if (!shouldInsert) return null;
       // check if the current entity is a scoped entity.
       // automagically assign the tenant id if so
       // TODO: find a way to handle hostname not found... 
       // right now the error is thrown directly from Postgres i.e. 23503 (foreign_key_violation)
       // which can be confusing...
-      model.TryCastTo<TEntity, ITenantScopedEntity>(scoped => {
-        scoped.TenantId = _context.AppContext.TenantHostname;
-      });
+      model.TryCastTo<TEntity, ITenantScopedEntity>(scoped => scoped.TenantId = Context.AppContext.TenantHostname);
 
       _table.Add(model);
       await Save();
@@ -67,12 +91,14 @@ namespace MultiTenancy {
       return model;
     }
 
-    public async Task<TEntity> Update(Expression<Func<TEntity, bool>> predicate, UpdateCallback<TEntity> callback, Func<string> onErr) {
-      var entity = await GetOne(predicate, e => e, onErr);
-
+    public async Task<TEntity> Update(UpdateCallback<TEntity> callback, Func<string> onNotFound, params Expression<Func<TEntity, bool>>[] filters) {
+      var entity = await GetOne(e => e, onNotFound, filters);
+      // gets called so the caller can update this cur entity accordingly
       callback(entity);
+      // auto update the updated at column
+      entity.TryCastTo<TEntity, IEntity>(ent => ent.UpdatedAt = DateTime.Now);
+      // save to the database and return the entity
       _table.Attach(entity);
-
       await Save();
       return entity;
     }
@@ -83,12 +109,29 @@ namespace MultiTenancy {
       return await Save() > 0;
     }
 
+    public async Task<int> Count(params Expression<Func<TEntity, bool>>[] filters) {
+      IQueryable<TEntity> q = GenerateQuery(filters);
+      return await q.CountAsync();
+    }
+
     public async Task<int> Save() {
       try {
-        return await _context.SaveChangesAsync();
+        return await Context.SaveChangesAsync();
       } catch (Exception e) {
         throw new HttpException(HttpStatusCode.BadRequest, e.InnerException.Message);
       }
+    }
+
+    public IQueryable<TEntity> GenerateQuery(params Expression<Func<TEntity, bool>>[] filters) {
+      IQueryable<TEntity> q = BeforeQuery == null ? _table : BeforeQuery(_table);
+
+      if (null != filters) {
+        foreach (var filter in filters) {
+          q = q.Where(filter);
+        }
+      }
+
+      return q;
     }
   }
 }
