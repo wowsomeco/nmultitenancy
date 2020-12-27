@@ -33,7 +33,17 @@ namespace MultiTenancy {
 
     public TenantDbContext Context { get; init; }
 
-    public Func<IQueryable<TEntity>, IQueryable<TEntity>> BeforeQuery { get; set; }
+    public ApplicationContext AppContext {
+      get {
+        return Context.AppContext;
+      }
+    }
+
+    /// <summary>
+    /// Callback that gets executed before making a get query.
+    /// e.g. you can define the relationship e.g. Include(), etc. here
+    /// </summary>    
+    public Func<IQueryable<TEntity>, IQueryable<TEntity>> BeforeQuery { get; set; } = null;
 
     public TenantRepository(TDbContext ctx) {
       Context = ctx;
@@ -104,7 +114,7 @@ namespace MultiTenancy {
     }
 
     public async Task<bool> Delete(int id) {
-      TEntity t = _table.Find(id);
+      TEntity t = await _table.FindAsync(id);
       _table.Remove(t);
       return await Save() > 0;
     }

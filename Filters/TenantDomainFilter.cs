@@ -21,7 +21,10 @@ namespace MultiTenancy {
     }
 
     public override void OnActionExecuting(ActionExecutingContext context) {
-      if (_appContext.TenantHostname.IsEmpty()) throw new HttpException(HttpStatusCode.BadRequest, "no Tenant hostname was provided");
+      if (_appContext.TenantHostname.IsEmpty()) {
+        var key = _appContext.Config.TenantKey;
+        throw new HttpException(HttpStatusCode.BadRequest, $"please provide tenant hostname in the header e.g {key} = hostname1");
+      }
     }
   }
 }

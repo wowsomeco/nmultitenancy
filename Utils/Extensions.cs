@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -24,6 +25,10 @@ namespace MultiTenancy {
       foreach (var c in callbacks) {
         c(t);
       }
+    }
+
+    public static void UniqueConstraints<T>(this EntityTypeBuilder<T> typeBuilder, Expression<Func<T, object>> cb) where T : class {
+      typeBuilder.HasIndex(cb).IsUnique();
     }
 
     public static bool AlreadyExists<T>(this DbSet<T> dbset, Func<T, bool> predicate) where T : class {
