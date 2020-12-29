@@ -9,6 +9,7 @@ namespace MultiTenancy {
     }
 
     private readonly string _appSettingsPrefix = "Multitenancy";
+    private readonly string _jwtPrefix = "Jwt";
     private readonly IConfiguration _config;
 
     public AppConfig(IConfiguration config, Options options) {
@@ -27,6 +28,12 @@ namespace MultiTenancy {
     public string TenantKey {
       get {
         return _config[$"{_appSettingsPrefix}:TenantKey"];
+      }
+    }
+
+    public string JwtSecretKey {
+      get {
+        return _config[$"{_jwtPrefix}:Secret"];
       }
     }
   }

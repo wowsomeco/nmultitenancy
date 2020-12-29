@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -85,6 +86,10 @@ namespace MultiTenancy {
     /// </summary>
     public static bool IsEmpty(this string str) {
       return string.IsNullOrEmpty(str);
+    }
+
+    public static byte[] ToBytes(this string str) {
+      return Encoding.ASCII.GetBytes(str);
     }
   }
 

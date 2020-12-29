@@ -28,6 +28,10 @@ namespace MultiTenancy {
     public static HttpException BadRequest(string msg) {
       return new HttpException(HttpStatusCode.BadRequest, msg);
     }
+
+    public static HttpException Unauthorized(string msg) {
+      return new HttpException(HttpStatusCode.Unauthorized, msg);
+    }
   }
 
   /// <summary>
@@ -36,11 +40,13 @@ namespace MultiTenancy {
   public class ExceptionMiddleware {
     private readonly RequestDelegate _next;
     private readonly AppConfig _appConfig;
+    private readonly ILogHandler _logger;
 
-    public ExceptionMiddleware(RequestDelegate next, AppConfig appConfig) {
+    public ExceptionMiddleware(RequestDelegate next, AppConfig appConfig, ILogHandler logger) {
       // TODO: Inject ILogger
       _next = next;
       _appConfig = appConfig;
+      _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext httpContext) {
@@ -53,13 +59,15 @@ namespace MultiTenancy {
     }
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception) {
-      Console.WriteLine(exception);
+      _logger.LogException(exception);
 
       string msg = exception.Message;
 
       context.Response.ContentType = "application/json";
       context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
+      // TODO: might need to create a factory to handle the exceptions
+      // e.g. using IExceptionHandler singleton...
       HttpException httpException = exception as HttpException;
       if (null != httpException) {
         context.Response.StatusCode = httpException.StatusCode;
