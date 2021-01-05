@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Configuration;
 
 namespace MultiTenancy {
@@ -5,7 +6,7 @@ namespace MultiTenancy {
 
   public class AppConfig : IConfig {
     public class Options {
-      public Delegate<string> ErrFormat { get; set; }
+      public Func<string, string> ErrFormat { get; set; }
     }
 
     private readonly string _appSettingsPrefix = "Multitenancy";

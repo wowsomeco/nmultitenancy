@@ -58,9 +58,12 @@ namespace MultiTenancy {
           operation.Parameters.Remove(existingParam);
         }
 
+        // NOTE: comment 'Required' out for now since when it's set to true, the Swagger UI wont work at all even when the field is filled already.
+        // TODO: look into Swashbuckle on github...
         operation.Parameters.Add(new OpenApiParameter {
           Name = _config.TenantKey,
           In = ParameterLocation.Header,
+          /*Required = true, */
           Description = attribute.Description,
           Schema = new OpenApiSchema {
             Type = "String"
