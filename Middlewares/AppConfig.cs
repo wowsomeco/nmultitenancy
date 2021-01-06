@@ -11,30 +11,30 @@ namespace MultiTenancy {
 
     private readonly string _appSettingsPrefix = "Multitenancy";
     private readonly string _jwtPrefix = "Jwt";
-    private readonly IConfiguration _config;
 
     public AppConfig(IConfiguration config, Options options) {
-      _config = config;
+      Config = config;
       AppOptions = options;
     }
 
+    public IConfiguration Config { get; private set; }
     public Options AppOptions { get; private set; }
 
     public string DbSchema {
       get {
-        return _config[$"{_appSettingsPrefix}:Schema"];
+        return Config[$"{_appSettingsPrefix}:Schema"];
       }
     }
 
     public string TenantKey {
       get {
-        return _config[$"{_appSettingsPrefix}:TenantKey"];
+        return Config[$"{_appSettingsPrefix}:TenantKey"];
       }
     }
 
     public string JwtSecretKey {
       get {
-        return _config[$"{_jwtPrefix}:Secret"];
+        return Config[$"{_jwtPrefix}:Secret"];
       }
     }
   }

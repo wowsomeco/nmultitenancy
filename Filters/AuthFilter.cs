@@ -3,6 +3,9 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace MultiTenancy {
+  /// <summary>
+  /// WIP
+  /// </summary>
   public class AuthFilterAttribute : ActionFilterAttribute {
     private readonly ApplicationContext _appContext;
 

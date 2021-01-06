@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -96,6 +97,14 @@ namespace MultiTenancy {
       return sub + "...";
     }
 
+    public static string LastSplit(this string str, char separator = '/') {
+      return str.Split(separator).Last();
+    }
+
+    public static string FirstSplit(this string str, char separator = '/') {
+      return str.Split(separator).First();
+    }
+
     /// <summary>
     /// Checks whether the string is empty
     /// </summary>
@@ -106,9 +115,31 @@ namespace MultiTenancy {
     public static byte[] ToBytes(this string str) {
       return Encoding.ASCII.GetBytes(str);
     }
+
+    public static string FileExtension(this string str) {
+      return Path.GetExtension(str);
+    }
+
+    public static string Flatten(this IList<string> strs, char separator = ' ') {
+      string s = string.Empty;
+      strs.LoopWithPointer((str, idx, first, last) => {
+        s += str;
+        if (!last) s += separator;
+      });
+
+      return s;
+    }
   }
 
   public static class ListExtensions {
+    public delegate void IteratorWithPointer<T>(T item, int idx, bool first, bool last);
+
+    public static void LoopWithPointer<T>(this IList<T> l, IteratorWithPointer<T> iter) {
+      for (int i = 0; i < l.Count; ++i) {
+        iter(l[i], i, i == 0, i == l.Count - 1);
+      }
+    }
+
     public static List<TOut> Map<TIn, TOut>(this IEnumerable<TIn> list, Func<TIn, TOut> mapper) {
       List<TOut> newList = new List<TOut>();
 
