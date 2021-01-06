@@ -132,6 +132,11 @@ namespace MultiTenancy {
       }
     }
 
+    public async Task<int> UpdateAndSave(TEntity e) {
+      _table.Attach(e);
+      return await Save();
+    }
+
     public IQueryable<TEntity> GenerateQuery(params Expression<Func<TEntity, bool>>[] filters) {
       IQueryable<TEntity> q = BeforeQuery == null ? _table : BeforeQuery(_table);
 

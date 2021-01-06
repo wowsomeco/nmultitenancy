@@ -132,11 +132,20 @@ namespace MultiTenancy {
   }
 
   public static class ListExtensions {
+    public delegate bool Iterator<T>(T item, int idx);
     public delegate void IteratorWithPointer<T>(T item, int idx, bool first, bool last);
 
     public static void LoopWithPointer<T>(this IList<T> l, IteratorWithPointer<T> iter) {
       for (int i = 0; i < l.Count; ++i) {
         iter(l[i], i, i == 0, i == l.Count - 1);
+      }
+    }
+
+    public static void Loop<T>(this IList<T> l, Iterator<T> iter) {
+      for (int i = 0; i < l.Count; ++i) {
+        // breaks when iter returns false, 
+        // otherwise iterate the next one
+        if (!iter(l[i], i)) break;
       }
     }
 
@@ -147,6 +156,10 @@ namespace MultiTenancy {
         newList.Add(mapper(itm));
 
       return newList;
+    }
+
+    public static bool IsEmpty<T>(this IList<T> l) {
+      return null == l || l.Count == 0;
     }
   }
 
