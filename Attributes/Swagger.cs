@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Mime;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,13 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MultiTenancy {
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+  public class ProducesValidationErrorAttribute : ProducesResponseTypeAttribute {
+    public ProducesValidationErrorAttribute(Type type = null) : base(type ?? typeof(IErrorResponse), (int)HttpStatusCode.UnprocessableEntity) {
+      Type = type;
+    }
+  }
+
   [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
   public class ProducesJsonAttribute : ProducesAttribute {
     public ProducesJsonAttribute(Type type) : base(MediaTypeNames.Application.Json) {

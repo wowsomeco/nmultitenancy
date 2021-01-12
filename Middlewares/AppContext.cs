@@ -34,6 +34,13 @@ namespace MultiTenancy {
       }
     }
 
+    public string AppTenantId {
+      get {
+        return $"{Config.DbSchema}:{TenantHostname}";
+      }
+    }
+
+    // TODO: should this be added as a method in JwtService instead ?
     public bool ValidateToken(out JwtSecurityToken jwtToken) {
       SecurityToken validatedToken = null;
       var securityKey = new SymmetricSecurityKey(Config.JwtSecretKey.ToBytes());

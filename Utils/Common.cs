@@ -14,6 +14,16 @@ namespace MultiTenancy {
       return condition;
     }
 
+    public static T IfNotNull<T>(T condition, Action<T> ifTrue = null, Action ifFalse = null) where T : class {
+      if (condition != null) {
+        ifTrue?.Invoke(condition);
+      } else {
+        ifFalse?.Invoke();
+      }
+
+      return condition;
+    }
+
     public static IEnumerable<ValidationResult> DoValidate<T>(this T t, params Func<T, string>[] validations) where T : class {
       var results = new List<ValidationResult>();
       foreach (var v in validations) {

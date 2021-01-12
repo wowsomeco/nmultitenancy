@@ -3,12 +3,36 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MultiTenancy {
+  public static class MvcExtensions {
+    /// <summary>
+    /// Transforms validation error that gets thrown by MVC if one or more variables are invalid.
+    /// </summary>
+    /// <param name="c">The service collection</param>
+    /// <param name="transformer">Callback that sends the list or error messages and returns the object as the format according to your liking</param>
+    public static void UseErrValidationResponse(this IServiceCollection c, Func<IEnumerable<string>, object> transformer) {
+      c.PostConfigure<ApiBehaviorOptions>(o => {
+        o.InvalidModelStateResponseFactory = ctx => {
+          var err = ctx.ModelState.Values.SelectMany(x => x.Errors)
+            .Select(x => x.ErrorMessage);
+          var resp = transformer(err);
+
+          return new JsonResult(resp) {
+            StatusCode = (int)HttpStatusCode.UnprocessableEntity
+          };
+        };
+      });
+    }
+  }
+
   public static class EFExtensions {
     public static ModelBuilder EntitiesOfType<T>(this ModelBuilder modelBuilder, Action<EntityTypeBuilder> buildAction) where T : class {
       return modelBuilder.EntitiesOfType(typeof(T), buildAction);
@@ -158,8 +182,23 @@ namespace MultiTenancy {
       return newList;
     }
 
+    public static List<T> Merge<T>(this List<T> list, params T[] items) {
+      if (null != items) {
+        foreach (T item in items) {
+          list.Add(item);
+        }
+      }
+
+      return list;
+    }
+
     public static bool IsEmpty<T>(this IList<T> l) {
       return null == l || l.Count == 0;
+    }
+
+    public static void SafeAdd<T>(this List<T> l, T item) {
+      if (l == null) l = new List<T>();
+      l.Add(item);
     }
   }
 

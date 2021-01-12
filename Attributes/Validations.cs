@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MultiTenancy {
@@ -35,6 +36,25 @@ namespace MultiTenancy {
 
     public override string FormatErrorMessage(string name) {
       return ErrorMessage ?? $"{name} is not a valid year";
+    }
+  }
+
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+  public class StringFilterAttribute : ValidationAttribute {
+    private List<string> _strings;
+
+    public StringFilterAttribute(params string[] strings) {
+      _strings = new List<string>(strings);
+    }
+
+    public override bool IsValid(object value) {
+      var str = value?.ToString();
+      return str.IsEmpty() ? false : _strings.Contains(str);
+    }
+
+    public override string FormatErrorMessage(string name) {
+      var flatten = _strings.Flatten(',');
+      return ErrorMessage ?? $"{name} must be either {flatten}";
     }
   }
 }
