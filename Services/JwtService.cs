@@ -10,6 +10,8 @@ namespace MultiTenancy {
 
     private readonly string _secretKey;
 
+    // TODO: add this as a singleton, so that we can get the AppConfig to set the DbSchema as one of the claims.
+    // to make it unique across other multitenancy projects
     public JwtService(string secretKey) {
       _secretKey = secretKey;
     }
