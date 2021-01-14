@@ -32,9 +32,11 @@ namespace MultiTenancy {
 
   public class ClaimFilterAttribute : AuthFilterAttribute {
     private string[] _filters;
+    private readonly ILogHandler _logger;
 
-    public ClaimFilterAttribute(ApplicationContext appContext, string[] filters) : base(appContext) {
+    public ClaimFilterAttribute(ApplicationContext appContext, ILogHandler logger, string[] filters) : base(appContext) {
       _filters = filters;
+      _logger = logger;
     }
 
     public override void OnAuthenticated() {
@@ -43,7 +45,9 @@ namespace MultiTenancy {
         if (strs.Length != 2) continue;
         var k = strs[0].Trim();
         var v = strs[1].Trim();
-        Console.WriteLine($"{k},{v}");
+
+        _logger.LogDebug($"{k},{v}");
+
         string claimValue;
         if (TryGetClaim(k, out claimValue)) {
           // skip since it means that claim has key with any value
