@@ -75,7 +75,9 @@ namespace MultiTenancy {
     public async Task<TResult> GetOne<TResult>(Func<TEntity, TResult> transformer, Func<string> onNotFound, params Expression<Func<TEntity, bool>>[] filters) {
       var q = GenerateQuery(filters);
 
-      var entity = await q.FirstOrDefaultAsync() ?? throw HttpException.NotExists(onNotFound());
+      var entity = await q.FirstOrDefaultAsync();
+      if (null == entity && onNotFound != null) throw HttpException.NotExists(onNotFound());
+
       return transformer(entity);
     }
 
