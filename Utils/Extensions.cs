@@ -192,6 +192,13 @@ namespace MultiTenancy {
       return list;
     }
 
+    public static List<T> RemoveWhere<T>(this List<T> l, Predicate<T> p) {
+      List<T> found = l.FindAll(p);
+      if (found.Count > 0) l.RemoveAll(p);
+
+      return found;
+    }
+
     public static bool IsEmpty<T>(this IList<T> l) {
       return null == l || l.Count == 0;
     }
