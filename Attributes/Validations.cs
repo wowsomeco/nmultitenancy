@@ -41,15 +41,44 @@ namespace MultiTenancy {
 
   [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
   public class StringFilterAttribute : ValidationAttribute {
-    private List<string> _strings;
+    public enum Comparer {
+      Equals,
+      StartsWith,
+      EndsWith,
+      Contains,
+    }
 
-    public StringFilterAttribute(params string[] strings) {
-      _strings = new List<string>(strings);
+    private List<string> _strings;
+    private readonly Comparer _comparer;
+    private readonly Dictionary<Comparer, Func<string, bool>> _handlers;
+
+    public StringFilterAttribute(Comparer c = Comparer.Equals, params string[] strings) {
+      _comparer = c;
+      _strings = strings == null ? new List<string>() : new List<string>(strings);
+
+      _handlers = new Dictionary<Comparer, Func<string, bool>> {
+        {
+          Comparer.Equals,
+          str => _strings.Exists(x => x.CompareStandard(str))
+        },
+        {
+          Comparer.StartsWith,
+          str => _strings.Exists(x => x.StartsWith(str))
+        },
+        {
+          Comparer.EndsWith,
+          str => _strings.Exists(x => x.EndsWith(str))
+        },
+        {
+          Comparer.Contains,
+          str => _strings.Contains(str)
+        },
+      };
     }
 
     public override bool IsValid(object value) {
       var str = value?.ToString();
-      return str.IsEmpty() ? false : _strings.Contains(str);
+      return str.IsEmpty() ? false : _handlers[_comparer](str);
     }
 
     public override string FormatErrorMessage(string name) {
