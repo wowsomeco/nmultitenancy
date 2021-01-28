@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -152,6 +153,29 @@ namespace MultiTenancy {
       });
 
       return s;
+    }
+
+    public static bool Is<T>(this string value) {
+      if (string.IsNullOrEmpty(value)) return false;
+      var conv = System.ComponentModel.TypeDescriptor.GetConverter(typeof(T));
+
+      if (conv.CanConvertFrom(typeof(string))) {
+        try {
+          conv.ConvertFrom(value);
+          return true;
+        } catch {
+        }
+      }
+      return false;
+    }
+
+    public static bool IsDate(this string value) {
+      DateTime dateTime;
+      if (DateTime.TryParseExact(value, "dd/MM/yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out dateTime)) {
+        return true;
+      }
+
+      return false;
     }
   }
 

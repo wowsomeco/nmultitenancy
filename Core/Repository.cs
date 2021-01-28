@@ -85,11 +85,9 @@ namespace MultiTenancy {
     /// Inserts a new entity to the database
     /// </summary>
     /// <param name="model">The entity to insert</param>
-    /// <param name="condition">The condition that gets called prior to inserting, if returns false, it wont proceed and returns null immediately</param>
+    /// <param name="condition">The condition that gets called prior to inserting, if returns false, it wont proceed and returns null immediately</param>    
     /// <returns>The newly inserted entity</returns>
     public async Task<TEntity> Insert(TEntity model, InsertCondition<TEntity> condition = null) {
-      bool shouldInsert = null != condition ? condition.Invoke(model) : true;
-      if (!shouldInsert) return null;
       // check if the current entity is a scoped entity.
       // automagically assign the tenant id if so
       // TODO: find a way to handle hostname not found... 
@@ -98,6 +96,10 @@ namespace MultiTenancy {
       model.TryCastTo<TEntity, ITenantScopedEntity>(scoped => scoped.TenantId = Context.AppContext.TenantHostname);
 
       _table.Add(model);
+
+      bool shouldInsert = null != condition ? condition.Invoke(model) : true;
+      if (!shouldInsert) return null;
+
       await Save();
 
       return model;
