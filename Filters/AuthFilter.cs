@@ -1,13 +1,9 @@
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace MultiTenancy {
-  /// <summary>
-  /// WIP
-  /// </summary>
-  public abstract class AuthFilterAttribute : ActionFilterAttribute {
+  public class AuthFilterAttribute : ActionFilterAttribute {
     private readonly ApplicationContext _appContext;
     private JwtSecurityToken _jwtToken = null;
 
@@ -27,7 +23,7 @@ namespace MultiTenancy {
       return c != null;
     }
 
-    public abstract void OnAuthenticated();
+    public virtual void OnAuthenticated() { }
   }
 
   public class ClaimFilterAttribute : AuthFilterAttribute {

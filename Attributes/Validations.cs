@@ -16,6 +16,27 @@ namespace MultiTenancy {
   }
 
   [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+  sealed public class MoreThanAttribute : ValidationAttribute {
+    public int MinValue { get; set; } = 0;
+    public bool Nullable { get; set; } = false;
+
+    public override bool IsValid(object value) {
+      if (value == null && Nullable) return true;
+
+      int v;
+      if (int.TryParse(value?.ToString(), out v)) {
+        return v > MinValue;
+      }
+
+      return false;
+    }
+
+    public override string FormatErrorMessage(string name) {
+      return ErrorMessage ?? $"{name} needs to be more than {MinValue}";
+    }
+  }
+
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
   sealed public class YearRangeAttribute : ValidationAttribute {
     /// <summary>
     /// Min offset from the current year
@@ -30,8 +51,13 @@ namespace MultiTenancy {
 
     public override bool IsValid(object value) {
       int curYear = DateTime.Now.Year;
-      int y = int.Parse(value?.ToString());
-      return y > (curYear - MinOffset) && y <= (curYear + MaxOffset);
+
+      int y;
+      if (int.TryParse(value?.ToString(), out y)) {
+        return y > (curYear - MinOffset) && y <= (curYear + MaxOffset);
+      }
+
+      return false;
     }
 
     public override string FormatErrorMessage(string name) {
