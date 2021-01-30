@@ -17,12 +17,12 @@ namespace MultiTenancy {
 
     public HttpException(HttpStatusCode code) : this(code, code.ToString()) { }
 
-    public static HttpException AlreadyExists(string msg) {
-      return new HttpException(HttpStatusCode.Conflict, $"{msg} already exists in the database");
+    public static HttpException AlreadyExists(string msg, string description = "already exists in the database") {
+      return new HttpException(HttpStatusCode.Conflict, $"{msg} {description}");
     }
 
-    public static HttpException NotExists(string msg) {
-      return new HttpException(HttpStatusCode.NotFound, $"{msg} does not exist in the database");
+    public static HttpException NotExists(string msg, string description = "does not exist in the database") {
+      return new HttpException(HttpStatusCode.NotFound, $"{msg} {description}");
     }
 
     public static HttpException BadRequest(string msg) {
