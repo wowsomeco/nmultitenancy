@@ -6,4 +6,8 @@ namespace MultiTenancy {
   public class DeleteResponse {
     public bool Deleted { get; set; }
   }
+
+  public class CountResponse {
+    public int Count { get; set; }
+  }
 }
