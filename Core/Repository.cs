@@ -45,6 +45,8 @@ namespace MultiTenancy {
     /// </summary>    
     public Func<IQueryable<TEntity>, IQueryable<TEntity>> BeforeQuery { get; set; } = null;
 
+    public Func<IQueryable<TEntity>, IQueryable<TEntity>> AfterFilter { get; set; } = null;
+
     public TenantRepository(TDbContext ctx) {
       Context = ctx;
       _table = Context.Set<TEntity>();
@@ -148,6 +150,10 @@ namespace MultiTenancy {
         foreach (var filter in filters) {
           q = q.Where(filter);
         }
+      }
+
+      if (null != AfterFilter) {
+        q = AfterFilter(q);
       }
 
       return q;

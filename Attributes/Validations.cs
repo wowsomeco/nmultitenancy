@@ -48,8 +48,14 @@ namespace MultiTenancy {
     /// Max offset from the current year.
     /// </summary>    
     public int MaxOffset { get; set; } = 0;
+    /// <summary>
+    /// If true, it wont get validated if the value is null
+    /// </summary>    
+    public bool Nullable { get; set; } = false;
 
     public override bool IsValid(object value) {
+      if (value == null && Nullable) return true;
+
       int curYear = DateTime.Now.Year;
 
       int y;
