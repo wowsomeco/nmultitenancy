@@ -23,9 +23,22 @@ namespace MultiTenancy {
     public override bool IsValid(object value) {
       if (value == null && Nullable) return true;
 
-      int v;
-      if (int.TryParse(value?.ToString(), out v)) {
-        return v > MinValue;
+      string strValue = value?.ToString();
+
+      // perform checking for if the value is either double or int
+      // TODO: refactor this mess
+      if (!strValue.IsEmpty()) {
+        if (strValue.Is<double>()) {
+          double v;
+          if (double.TryParse(strValue, out v)) {
+            return v > MinValue;
+          }
+        } else if (strValue.Is<int>()) {
+          int v;
+          if (int.TryParse(strValue, out v)) {
+            return v > MinValue;
+          }
+        }
       }
 
       return false;
