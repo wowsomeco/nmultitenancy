@@ -169,13 +169,8 @@ namespace MultiTenancy {
       return false;
     }
 
-    public static bool IsDate(this string value) {
-      DateTime dateTime;
-      if (DateTime.TryParseExact(value, "dd/MM/yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out dateTime)) {
-        return true;
-      }
-
-      return false;
+    public static DateTime? ToDate(this string v, string format = "yyyy-MM-dd") {
+      return DateTime.TryParseExact(v, format, new CultureInfo("en-US"), DateTimeStyles.None, out DateTime parseDate) ? parseDate : null;
     }
   }
 
