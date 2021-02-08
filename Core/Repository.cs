@@ -119,7 +119,7 @@ namespace MultiTenancy {
       return entity;
     }
 
-    public async Task<bool> Delete(int id) {
+    public async Task<bool> Delete(dynamic id) {
       TEntity t = await _table.FindAsync(id) ?? throw HttpException.NotExists($"id {id}");
       _table.Remove(t);
       return await Save() > 0;

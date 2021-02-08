@@ -172,6 +172,22 @@ namespace MultiTenancy {
     public static DateTime? ToDate(this string v, string format = "yyyy-MM-dd") {
       return DateTime.TryParseExact(v, format, new CultureInfo("en-US"), DateTimeStyles.None, out DateTime parseDate) ? parseDate : null;
     }
+
+    public static bool LetterOrDigitOnly(this string s) {
+      foreach (var c in s) {
+        if (!char.IsLetterOrDigit(c)) return false;
+      }
+      return true;
+    }
+
+    public static bool HasSpecialChar(this string s, string excludes = "") {
+      string specialChar = @"\|!#$%&/()=?»«@£§€{}.-;'<>_,";
+      foreach (var item in specialChar) {
+        if (s.Contains(item) && !excludes.Contains(item)) return true;
+      }
+
+      return false;
+    }
   }
 
   public static class ListExtensions {
@@ -237,7 +253,15 @@ namespace MultiTenancy {
     /// <typeparam name="TOut"></typeparam>
     public static void TryCastTo<TIn, TOut>(this TIn t, Action<TOut> success)
     where TIn : class where TOut : class {
-      if (t is TOut) success(t as TOut);
+      if (t is TOut o) success(o);
+    }
+
+    public static bool IsNullable<T>(this T obj) {
+      if (obj == null) return true; // obvious
+      Type type = typeof(T);
+      if (!type.IsValueType) return true; // ref-type
+      if (Nullable.GetUnderlyingType(type) != null) return true; // Nullable<T>
+      return false; // value-type
     }
   }
 }
