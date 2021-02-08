@@ -183,7 +183,7 @@ namespace MultiTenancy {
     public static bool HasSpecialChar(this string s, string excludes = "") {
       string specialChar = @"\|!#$%&/()=?»«@£§€{}.-;'<>_,";
       foreach (var item in specialChar) {
-        if (s.Contains(item) && !excludes.Contains(item)) return true;
+        if (!s.IsEmpty() && s.Contains(item) && !excludes.Contains(item)) return true;
       }
 
       return false;
