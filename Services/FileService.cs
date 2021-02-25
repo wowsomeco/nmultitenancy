@@ -102,6 +102,14 @@ namespace MultiTenancy {
     public async Task<FileEntity> UploadAndSaveToDb<TEntity, TDbContext>(TenantRepository<TEntity, TDbContext> repo, TEntity entity, IFormFile file, string prefix, string name, params string[] acceptedExtensions)
     where TEntity : class, IEntityHasFiles
     where TDbContext : TenantDbContext {
+      // check if exists in the list , delete by its key
+      var exists = entity.Documents?.RemoveWhere(x => x.Name.CompareStandard(name));
+      if (!exists.IsEmpty()) {
+        foreach (var exist in exists) {
+          await DeleteFile(exist.Key);
+        }
+      }
+
       var fileEntity = await UploadFile(file, prefix, name, acceptedExtensions);
       Utils.If(
         entity.Documents == null,
