@@ -13,6 +13,7 @@ namespace MultiTenancy {
     public string Key { get; init; }
     public string Url { get; set; }
     public string Name { get; set; }
+    public string Type { get; set; }
   }
 
   public interface IEntityHasFiles : IEntity {
@@ -83,7 +84,8 @@ namespace MultiTenancy {
             InputStream = ms,
             Key = key,
             BucketName = S3Bucket,
-            CannedACL = S3CannedACL.PublicRead
+            CannedACL = S3CannedACL.PublicRead,
+            ContentType = file.ContentType
           };
 
           await new TransferUtility(_s3).UploadAsync(uploadRequest);
@@ -91,7 +93,8 @@ namespace MultiTenancy {
           return new FileEntity {
             Key = key,
             Url = GetUrl(key),
-            Name = name
+            Name = name,
+            Type = file.ContentType
           };
         }
       } catch (AmazonS3Exception e) {
