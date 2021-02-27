@@ -75,7 +75,7 @@ namespace MultiTenancy {
           if (!accepted) throw HttpException.BadRequest($"only accept file with extensions {acceptedExtensions.Flatten(',')}");
         }
 
-        string key = Path.Combine(prefix, Guid.NewGuid().ToString());
+        string key = Path.Combine(prefix, Guid.NewGuid().ToString() + Path.GetExtension(file.FileName));
 
         using (var ms = new MemoryStream()) {
           await file.CopyToAsync(ms);
