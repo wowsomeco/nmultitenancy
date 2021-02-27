@@ -93,7 +93,7 @@ namespace MultiTenancy {
           return new FileEntity {
             Key = key,
             Url = GetUrl(key),
-            Name = name,
+            Name = name.ToUnderscoreLower(),
             Type = file.ContentType
           };
         }
