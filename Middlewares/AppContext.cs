@@ -26,11 +26,8 @@ namespace MultiTenancy {
 
     public string TenantHostname {
       get {
-        try {
-          return HttpContext.Request.Headers[Config.TenantKey];
-        } catch {
-          throw HttpException.BadRequest("Can not find tenant hostname in the request header");
-        }
+        string tenantHostname = HttpContext.Request.Headers[Config.TenantKey];
+        return tenantHostname ?? throw HttpException.BadRequest("Can not find tenant hostname in the request header");
       }
     }
 

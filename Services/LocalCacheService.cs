@@ -25,11 +25,11 @@ namespace MultiTenancy {
   // TODO: unit test this
   public class LocalCacheService {
     IMemoryCache _cache;
-    string _tenantId;
+    ApplicationContext _ctx;
 
     public LocalCacheService(IMemoryCache cache, ApplicationContext ctx) {
       _cache = cache;
-      _tenantId = ctx.TenantHostname;
+      _ctx = ctx;
     }
 
     public TItem GetValue<TItem>(string key) where TItem : new() {
@@ -52,10 +52,12 @@ namespace MultiTenancy {
     }
 
     CacheModel GetTenantCache() {
+      string tenantId = _ctx.TenantHostname;
+
       CacheModel cm = null;
-      if (!_cache.TryGetValue<CacheModel>(_tenantId, out cm)) {
+      if (!_cache.TryGetValue<CacheModel>(tenantId, out cm)) {
         cm = new CacheModel();
-        _cache.Set(_tenantId, cm);
+        _cache.Set(tenantId, cm);
       }
 
       return cm;
