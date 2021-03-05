@@ -15,13 +15,11 @@ namespace MultiTenancy {
     }
 
     HttpContext HttpContext {
-      get { return _httpAccessor.HttpContext; }
+      get => _httpAccessor.HttpContext;
     }
 
     public string AuthToken {
-      get {
-        return HttpContext.Request.Headers[HeaderNames.Authorization];
-      }
+      get => HttpContext.Request.Headers[HeaderNames.Authorization];
     }
 
     public string TenantHostname {
@@ -32,9 +30,12 @@ namespace MultiTenancy {
     }
 
     public string AppTenantId {
-      get {
-        return $"{Config.DbSchema}:{TenantHostname}";
-      }
+      get => $"{Config.DbSchema}:{TenantHostname}";
+    }
+
+    public string TryGetTenantHostname() {
+      string tenantHostname = HttpContext.Request.Headers[Config.TenantKey];
+      return tenantHostname ?? "";
     }
 
     // TODO: should this be added as a method in JwtService instead ?

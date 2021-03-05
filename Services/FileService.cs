@@ -23,9 +23,11 @@ namespace MultiTenancy {
   public class FileUploader {
     private readonly AmazonS3Client _s3;
     private readonly AppConfig _appConfig;
+    private readonly ApplicationContext _ctx;
 
-    public FileUploader(AppConfig config) {
+    public FileUploader(AppConfig config, ApplicationContext ctx) {
       _appConfig = config;
+      _ctx = ctx;
 
       var accessKey = _appConfig.Config["AWS:AccessKey"];
       var secretKey = _appConfig.Config["AWS:SecretKey"];
@@ -33,20 +35,14 @@ namespace MultiTenancy {
     }
 
     public string Region {
-      get {
-        return _appConfig.Config["AWS:Region"];
-      }
+      get => _appConfig.Config["AWS:Region"];
     }
 
     public string S3Bucket {
-      get {
-        return _appConfig.Config["AWS:S3Bucket"];
-      }
+      get => _appConfig.Config["AWS:S3Bucket"];
     }
 
-    public string GetUrl(string key) {
-      return $"https://{S3Bucket}.s3-{Region}.amazonaws.com/{key}";
-    }
+    public string GetUrl(string key) => $"https://{S3Bucket}.s3-{Region}.amazonaws.com/{key}";
 
     public async Task<bool> DeleteFile(string key) {
       try {
@@ -75,7 +71,11 @@ namespace MultiTenancy {
           if (!accepted) throw HttpException.BadRequest($"only accept file with extensions {acceptedExtensions.Flatten(',')}");
         }
 
-        string key = Path.Combine(prefix, Guid.NewGuid().ToString() + Path.GetExtension(file.FileName));
+        string key = Path.Combine(
+          _ctx.TryGetTenantHostname(),
+          prefix,
+          Guid.NewGuid().ToString() + Path.GetExtension(file.FileName)
+        );
 
         using (var ms = new MemoryStream()) {
           await file.CopyToAsync(ms);
