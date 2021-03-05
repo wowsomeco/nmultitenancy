@@ -146,7 +146,7 @@ namespace MultiTenancy {
           !Utils.If(
             _repo.Table.AlreadyExists(x => x.Id == id),
             () =>
-              throw HttpException.AlreadyExists($"{id}", "sudah ada di database")
+              throw HttpException.AlreadyExists($"{id}")
           )
       );
 

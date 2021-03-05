@@ -7,6 +7,14 @@ using System.Text;
 
 namespace MultiTenancy {
   public static class StringExtensions {
+    public static string ToDash(this string str) {
+      return str.Replace(" ", "-");
+    }
+
+    public static string ToDashLower(this string str) {
+      return str.ToDash().ToLower();
+    }
+
     public static string ToUnderscore(this string str) {
       return str.Replace(" ", "_");
     }
