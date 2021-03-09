@@ -93,7 +93,7 @@ namespace MultiTenancy {
           return new FileEntity {
             Key = key,
             Url = GetUrl(key),
-            Name = name.ToUnderscoreLower(),
+            Name = name.ToDashLower(),
             Type = file.ContentType
           };
         }
@@ -105,14 +105,15 @@ namespace MultiTenancy {
     public async Task<FileEntity> UploadAndSaveToDb<TEntity, TDbContext>(TenantRepository<TEntity, TDbContext> repo, TEntity entity, IFormFile file, string prefix, string name, params string[] acceptedExtensions)
     where TEntity : class, IEntityHasFiles
     where TDbContext : TenantDbContext {
+      string standardizedName = name.ToDashLower();
       // check if exists in the list , delete by its key
-      var exists = entity.Documents?.RemoveWhere(x => x.Name.CompareStandard(name));
+      var exists = entity.Documents?.RemoveWhere(x => x.Name == standardizedName);
       if (!exists.IsEmpty()) {
         foreach (var exist in exists) {
           await DeleteFile(exist.Key);
         }
       }
-
+      // upload to s3
       var fileEntity = await UploadFile(file, prefix, name, acceptedExtensions);
       Utils.If(
         entity.Documents == null,

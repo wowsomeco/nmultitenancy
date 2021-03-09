@@ -41,7 +41,9 @@ namespace MultiTenancy {
     }
 
     public static IRuleBuilderOptions<T, U> Required<T, U>(this IRuleBuilder<T, U> ruleBuilder) where U : class {
-      return ruleBuilder.NotNull().NotEmpty().WithMessage("{PropertyName} is required");
+      var errMsg = "{PropertyName} is required";
+
+      return ruleBuilder.NotNull().WithMessage(errMsg).NotEmpty().WithMessage(errMsg);
     }
   }
 }
