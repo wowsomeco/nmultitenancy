@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Microsoft.AspNetCore.Builder;
 
 namespace MultiTenancy {
@@ -26,6 +27,12 @@ namespace MultiTenancy {
       if (!type.IsValueType) return true; // ref-type
       if (Nullable.GetUnderlyingType(type) != null) return true; // Nullable<T>
       return false; // value-type
+    }
+
+    public static DirectoryInfo CreateDirIfNotExist(string path) {
+      if (path.IsEmpty()) throw new NullReferenceException("path cant be null");
+
+      return !Directory.Exists(path) ? Directory.CreateDirectory(path) : new DirectoryInfo(path);
     }
   }
 }

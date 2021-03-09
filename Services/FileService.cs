@@ -20,12 +20,12 @@ namespace MultiTenancy {
     List<FileEntity> Documents { get; set; }
   }
 
-  public class FileUploader {
+  public class FileService {
     private readonly AmazonS3Client _s3;
     private readonly AppConfig _appConfig;
     private readonly ApplicationContext _ctx;
 
-    public FileUploader(AppConfig config, ApplicationContext ctx) {
+    public FileService(AppConfig config, ApplicationContext ctx) {
       _appConfig = config;
       _ctx = ctx;
 

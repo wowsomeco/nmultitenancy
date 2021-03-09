@@ -13,9 +13,7 @@ namespace MultiTenancy {
     private readonly string _jwtPrefix = "Jwt";
 
     public string this[string key] {
-      get {
-        return Config[key];
-      }
+      get => Config[key] ?? throw new NullReferenceException($"{key} does not exist in appsettings");
     }
 
     public AppConfig(IConfiguration config, Options options) {
@@ -27,21 +25,15 @@ namespace MultiTenancy {
     public Options AppOptions { get; private set; }
 
     public string DbSchema {
-      get {
-        return Config[$"{_appSettingsPrefix}:Schema"];
-      }
+      get => Config[$"{_appSettingsPrefix}:Schema"];
     }
 
     public string TenantKey {
-      get {
-        return Config[$"{_appSettingsPrefix}:TenantKey"];
-      }
+      get => Config[$"{_appSettingsPrefix}:TenantKey"];
     }
 
     public string JwtSecretKey {
-      get {
-        return Config[$"{_jwtPrefix}:Secret"];
-      }
+      get => Config[$"{_jwtPrefix}:Secret"];
     }
   }
 }
