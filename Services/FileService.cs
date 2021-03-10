@@ -57,18 +57,18 @@ namespace MultiTenancy {
       }
     }
 
-    public async Task<FileEntity> UploadFile(IFormFile file, string prefix, string name, params string[] acceptedExtensions) {
+    public async Task<FileEntity> UploadFile(IFormFile file, string prefix, string name, params string[] acceptedContentTypes) {
       try {
-        string extension = file.FileName.FileExtension();
-        if (!acceptedExtensions.IsEmpty()) {
+        string contentType = file.ContentType;
+        if (!acceptedContentTypes.IsEmpty()) {
           bool accepted = false;
 
-          acceptedExtensions.Loop((ae, _) => {
-            accepted = extension.CompareStandard(ae);
+          acceptedContentTypes.Loop((ae, _) => {
+            accepted = contentType.CompareStandard(ae);
             return !accepted;
           });
 
-          if (!accepted) throw HttpException.BadRequest($"only accept file with extensions {acceptedExtensions.Flatten(',')}");
+          if (!accepted) throw HttpException.BadRequest($"only accept file with content-type {acceptedContentTypes.Flatten(',')}");
         }
 
         string key = Path.Combine(
@@ -102,7 +102,7 @@ namespace MultiTenancy {
       }
     }
 
-    public async Task<FileEntity> UploadAndSaveToDb<TEntity, TDbContext>(TenantRepository<TEntity, TDbContext> repo, TEntity entity, IFormFile file, string prefix, string name, params string[] acceptedExtensions)
+    public async Task<FileEntity> UploadAndSaveToDb<TEntity, TDbContext>(TenantRepository<TEntity, TDbContext> repo, TEntity entity, IFormFile file, string prefix, string name, params string[] acceptedContentTypes)
     where TEntity : class, IEntityHasFiles
     where TDbContext : TenantDbContext {
       string standardizedName = name.ToDashLower();
@@ -114,7 +114,7 @@ namespace MultiTenancy {
         }
       }
       // upload to s3
-      var fileEntity = await UploadFile(file, prefix, name, acceptedExtensions);
+      var fileEntity = await UploadFile(file, prefix, name, acceptedContentTypes);
       Utils.If(
         entity.Documents == null,
         () => entity.Documents = new List<FileEntity>() { fileEntity },

@@ -39,6 +39,14 @@ namespace MultiTenancy {
       return list;
     }
 
+    public static List<T> Combine<T>(params IList<T>[] lists) {
+      List<T> newList = new List<T>();
+      foreach (IList<T> l in lists) {
+        newList.AddRange(l);
+      }
+      return newList;
+    }
+
     public static List<T> RemoveWhere<T>(this List<T> l, Predicate<T> p) {
       List<T> found = l.FindAll(p);
       if (found.Count > 0) l.RemoveAll(p);
