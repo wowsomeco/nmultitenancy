@@ -4,9 +4,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MultiTenancy {
   public static class StringExtensions {
+    public static string ShortGuid() {
+      return Regex.Replace(Convert.ToBase64String(Guid.NewGuid().ToByteArray()), "[/+=]", "");
+    }
+
     public static string ToDash(this string str) {
       return str.Replace(" ", "-");
     }

@@ -33,6 +33,21 @@ namespace MultiTenancy {
       return rule;
     }
 
+    public static IRuleBuilderOptions<T, string> ValidFutureDate<T>(this IRuleBuilder<T, string> ruleBuilder) {
+      var rule = ruleBuilder
+      .Must(x => {
+        var dt = x.ToDate();
+        if (null != dt) {
+          return dt.Value.CompareTo(DateTime.Now) >= 0;
+        }
+
+        return false;
+      })
+      .WithMessage("{PropertyName} must be later than or equal today's date");
+
+      return rule;
+    }
+
     public static IRuleBuilderOptions<T, string> ValidMonthYear<T>(this IRuleBuilder<T, string> ruleBuilder) {
       var rule = ruleBuilder.Must(x => x.ToDateMY() != null)
         .WithMessage("{PropertyName} is not valid, accepted format = YYYY-MM");

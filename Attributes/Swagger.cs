@@ -4,7 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Mime;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -77,6 +79,36 @@ namespace MultiTenancy {
             Type = "String"
           }
         });
+      }
+    }
+  }
+
+  public class OptionalPathParameterFilter : IOperationFilter {
+    private readonly string _captureName = "routeParameter";
+
+    public void Apply(OpenApiOperation operation, OperationFilterContext context) {
+      var httpMethodAttributes = context.MethodInfo
+        .GetCustomAttributes(true)
+        .OfType<HttpMethodAttribute>();
+
+      var httpMethodWithOptional = httpMethodAttributes?.FirstOrDefault(m => m.Template.Contains("?"));
+      if (httpMethodWithOptional == null)
+        return;
+
+      string regex = $"{{(?<{_captureName}>\\w+)\\?}}";
+
+      var matches = System.Text.RegularExpressions.Regex.Matches(httpMethodWithOptional.Template, regex);
+
+      foreach (Match match in matches) {
+        var name = match.Groups[_captureName].Value;
+
+        var parameter = operation.Parameters.FirstOrDefault(p => p.In == ParameterLocation.Path && p.Name == name);
+        if (parameter != null) {
+          parameter.AllowEmptyValue = true;
+          parameter.Description = "Must check \"Send empty value\" or Swagger passes a comma for empty values otherwise";
+          parameter.Required = false;
+          parameter.Schema.Nullable = true;
+        }
       }
     }
   }

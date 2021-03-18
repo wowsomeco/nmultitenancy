@@ -84,6 +84,8 @@ namespace MultiTenancy {
       };
     }
 
+    public StringFilterAttribute(params string[] strings) : this(Comparer.Equals, strings) { }
+
     public override bool IsValid(object value) {
       var str = value?.ToString();
       return str.IsEmpty() ? false : _handlers[_comparer](str);
