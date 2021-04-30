@@ -36,8 +36,10 @@ namespace MultiTenancy {
   }
 
   [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-  sealed public class NoWhitespaceAttribute : ValidationAttribute {
+  sealed public class NoWhitespaceAttribute : CheckNullAttribute {
     public override bool IsValid(object value) {
+      if (base.IsValid(value)) return true;
+
       var str = value?.ToString();
       return !str.IsEmpty() && !str.Contains(' ');
     }
