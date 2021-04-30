@@ -30,4 +30,8 @@ namespace MultiTenancy {
   public class AllowContentImgAttribute : AllowedContentTypeAttribute {
     public AllowContentImgAttribute() : base(MimeTypes.Jpeg, MimeTypes.Png) { }
   }
+
+  public class AllowContentWordsAttribute : AllowedContentTypeAttribute {
+    public AllowContentWordsAttribute() : base(MimeTypes.Words) { }
+  }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MultiTenancy {
-  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
   sealed public class NoSpecialCharAttribute : CheckNullAttribute {
     public string Excludes { get; set; } = "";
 
@@ -20,7 +20,7 @@ namespace MultiTenancy {
     }
   }
 
-  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
   sealed public class LetterOrDigitAttribute : CheckNullAttribute {
     public override bool IsValid(object value) {
       var str = value?.ToString();
@@ -35,7 +35,7 @@ namespace MultiTenancy {
     }
   }
 
-  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
   sealed public class NoWhitespaceAttribute : ValidationAttribute {
     public override bool IsValid(object value) {
       var str = value?.ToString();
