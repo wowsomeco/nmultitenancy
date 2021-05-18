@@ -26,5 +26,9 @@ namespace MultiTenancy {
     public static string ToDatetime(this DateTimeOffset d) {
       return d.ToString("dd-MM-yyyy H:mm:ss");
     }
+
+    public static DateTime DMYOnly(this DateTime dt) {
+      return new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, 0, dt.Kind);
+    }
   }
 }

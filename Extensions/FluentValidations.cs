@@ -43,6 +43,21 @@ namespace MultiTenancy {
 
         return false;
       })
+      .WithMessage("{PropertyName} must be later than today's date");
+
+      return rule;
+    }
+
+    public static IRuleBuilderOptions<T, string> FromTodayOnwards<T>(this IRuleBuilder<T, string> ruleBuilder) {
+      var rule = ruleBuilder
+      .Must(x => {
+        var dt = x.ToDate();
+        if (null != dt) {
+          return dt.Value.DMYOnly().CompareTo(DateTime.Now.DMYOnly()) >= 0;
+        }
+
+        return false;
+      })
       .WithMessage("{PropertyName} must be later than or equal today's date");
 
       return rule;
