@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace MultiTenancy {
-  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
   sealed public class ValidDateAttribute : ValidationAttribute {
     public string Format { get; set; } = "yyyy-MM-dd";
 
