@@ -136,5 +136,14 @@ namespace MultiTenancy {
     public static DateTime? ToDateMY(this string str) {
       return str.IsEmpty() ? null : (str + "-01").ToDate();
     }
+
+    public static bool IsTodayOnwards(this string d, string format = "yyyy-MM-dd") {
+      var dt = d.ToDate(format);
+      if (null != dt) {
+        return dt.Value.CompareTo(DateTime.Now) >= 0;
+      }
+
+      return false;
+    }
   }
 }
