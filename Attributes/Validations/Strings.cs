@@ -94,7 +94,7 @@ namespace MultiTenancy {
     }
 
     public override string FormatErrorMessage(string name) {
-      var flatten = _strings.Flatten(',');
+      var flatten = _strings.Flatten(",");
       return ErrorMessage ?? $"{name} must be either {flatten}";
     }
   }

@@ -19,7 +19,7 @@ namespace MultiTenancy {
             return !accepted;
           });
 
-          if (!accepted) return new ValidationResult($"only accept file with content-type {_contentTypes.Flatten(',')}");
+          if (!accepted) return new ValidationResult($"only accept file with content-type {_contentTypes.Flatten(",")}");
         }
       }
 

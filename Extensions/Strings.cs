@@ -89,7 +89,7 @@ namespace MultiTenancy {
       return Path.GetExtension(str);
     }
 
-    public static string Flatten(this IList<string> strs, char separator = ' ') {
+    public static string Flatten(this IList<string> strs, string separator = " ") {
       string s = string.Empty;
       strs.LoopWithPointer((str, idx, first, last) => {
         s += str;

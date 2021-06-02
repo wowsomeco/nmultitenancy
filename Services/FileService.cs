@@ -122,7 +122,7 @@ namespace MultiTenancy {
             return !accepted;
           });
 
-          if (!accepted) throw HttpException.BadRequest($"only accept file with content-type {acceptedContentTypes.Flatten(',')}");
+          if (!accepted) throw HttpException.BadRequest($"only accept file with content-type {acceptedContentTypes.Flatten(",")}");
         }
 
         string key = Path.Combine(
