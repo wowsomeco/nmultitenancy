@@ -42,13 +42,13 @@ namespace MultiTenancy {
         var k = strs[0].Trim();
         var v = strs[1].Trim();
 
-        _logger.LogDebug($"{k},{v}");
-
         string claimValue;
         if (TryGetClaim(k, out claimValue)) {
           // skip since it means that claim has key with any value
           // e.g. 'username,*' means as long as claim has a key 'username' then it's valid.
           if (v == "*") continue;
+
+          _logger.LogDebug($"{k},{claimValue}");
 
           if (!v.CompareStandard(claimValue)) {
             throw HttpException.Unauthorized("Unauthorized");
