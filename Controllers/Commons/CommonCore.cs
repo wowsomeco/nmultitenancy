@@ -1,17 +1,20 @@
+using System.Collections.Generic;
+
 namespace MultiTenancy {
   public interface IEntityHasId<TType> : IEntity {
     TType Id { get; }
   }
 
-  public interface IGetDto<T> {
-    void FromEntity(T e);
+  public class GetWithCountDto<T> {
+    public List<T> Data { get; set; }
+    public int Count { get; set; }
   }
 
-  public interface IUpdateDto<T> {
-    void OnUpdate(T entity);
-  }
+  public class InsertCondition<TEntity, TInsert> {
+    public delegate bool Reject(TEntity e, TInsert model);
+    public delegate HttpException Reason(TInsert model);
 
-  public interface IInsertDto<T> {
-    T ToEntity();
+    public Reject RejectWhen { get; set; }
+    public Reason RejectReason { get; set; }
   }
 }

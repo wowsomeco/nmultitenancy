@@ -3,36 +3,37 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MultiTenancy {
-  [ApiController]
-  [Route("[controller]")]
-  [TypeFilter(typeof(TenantDomainFilterAttribute))]
-  [TypeFilter(typeof(AuthFilterAttribute))]
   public abstract class CommonController<TEntityIdType, TEntity, TGet, TInsert, TUpdate, TDbContext> : GetControllerBase<TEntityIdType, TEntity, TGet, TDbContext>
   where TEntityIdType : IComparable
   where TEntity : class, IEntityHasId<TEntityIdType>
-  where TGet : IGetDto<TEntity>, new()
-  where TInsert : IInsertDto<TEntity>
-  where TUpdate : IUpdateDto<TEntity>
   where TDbContext : TenantDbContext {
+    protected abstract TEntity OnInsert(TInsert model);
+    protected abstract void OnUpdate(TEntity entity, TUpdate model);
+    protected virtual InsertCondition<TEntity, TInsert> InsertCondition() => null;
+
     public CommonController(TenantRepository<TEntity, TDbContext> repo) : base(repo) { }
 
     /// <summary>
     /// Creates a new item
     /// </summary>                
     [HttpPost]
-    [TenantHeader]
     public async Task<IActionResult> Insert([FromBody] TInsert body) {
-      var newEntity = body.ToEntity();
+      var newEntity = OnInsert(body);
+
+      var condition = InsertCondition();
+
       var result = await _repo.Insert(
         newEntity,
+        condition == null ?
+        null :
         e =>
           !Utils.If(
-            _repo.Table.AlreadyExists(x => x.Id.Equals(newEntity.Id)),
-            () => throw HttpException.AlreadyExists($"{newEntity.Id}")
+            _repo.Table.AlreadyExists(x => condition.RejectWhen(x, body)),
+            () => throw condition.RejectReason(body)
           )
       );
 
-      return Ok(GetDto(result));
+      return Ok(MapFromEntity(result));
     }
 
     /// <summary>
@@ -40,17 +41,16 @@ namespace MultiTenancy {
     /// </summary>                
     [HttpPut("{id}")]
     [ProducesValidationError]
-    [TenantHeader]
     public async Task<IActionResult> Update(TEntityIdType id, [FromBody] TUpdate body) {
       var result = await _repo.Update(
         t => {
-          body.OnUpdate(t);
+          OnUpdate(t, body);
         },
         () => EntityName,
         x => x.Id.Equals(id)
       );
 
-      return Ok(GetDto(result));
+      return Ok(MapFromEntity(result));
     }
   }
 }
