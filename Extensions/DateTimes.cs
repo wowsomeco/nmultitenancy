@@ -11,6 +11,12 @@ namespace MultiTenancy {
       return dtStr.Substring(0, dtStr.Length - 3);
     }
 
+    public static string ToMYString(this DateTime? dt) {
+      if (null == dt) return null;
+
+      return dt.Value.ToMYString();
+    }
+
     public static string ToDateString(this DateTime dt) {
       return dt.ToString("yyyy-MM-dd");
     }
