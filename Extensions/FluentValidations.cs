@@ -18,6 +18,10 @@ namespace MultiTenancy {
       return r.When(x => condition(x) != null);
     }
 
+    public static IRuleBuilderOptions<T, string> DigitOnly<T>(this IRuleBuilder<T, string> ruleBuilder) {
+      return ruleBuilder.Must(x => x.DigitOnly()).WithMessage("{PropertyName} only accepts digits");
+    }
+
     public static IRuleBuilderOptions<T, string> NoWhitespace<T>(this IRuleBuilder<T, string> ruleBuilder) {
       return ruleBuilder.Must(x => !x.Contains(' ')).WithMessage("{PropertyName} cant contain any whitespaces");
     }

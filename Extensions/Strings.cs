@@ -124,6 +124,13 @@ namespace MultiTenancy {
       return true;
     }
 
+    public static bool DigitOnly(this string s) {
+      foreach (var c in s) {
+        if (!char.IsDigit(c)) return false;
+      }
+      return true;
+    }
+
     public static bool HasSpecialChar(this string s, string excludes = "") {
       string specialChar = @"\|!#$%&/()=?»«@£§€{}.-;'<>_,";
       foreach (var item in specialChar) {
