@@ -17,7 +17,7 @@ namespace MultiTenancy {
     /// Creates a new item
     /// </summary>                
     [HttpPost]
-    public async Task<IActionResult> Insert([FromBody] TInsert body) {
+    public virtual async Task<IActionResult> Insert([FromBody] TInsert body) {
       var newEntity = OnInsert(body);
 
       var condition = InsertCondition();
@@ -41,7 +41,7 @@ namespace MultiTenancy {
     /// </summary>                
     [HttpPut("{id}")]
     [ProducesValidationError]
-    public async Task<IActionResult> Update(TEntityIdType id, [FromBody] TUpdate body) {
+    public virtual async Task<IActionResult> Update(TEntityIdType id, [FromBody] TUpdate body) {
       var result = await _repo.Update(
         t => {
           OnUpdate(t, body);
