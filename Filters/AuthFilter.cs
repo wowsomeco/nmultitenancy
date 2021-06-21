@@ -13,7 +13,7 @@ namespace MultiTenancy {
 
     public override void OnActionExecuting(ActionExecutingContext context) {
       if (_appContext.ValidateToken(out _jwtToken)) {
-        OnAuthenticated();
+        OnAuthenticated(context);
       }
     }
 
@@ -23,7 +23,7 @@ namespace MultiTenancy {
       return c != null;
     }
 
-    public virtual void OnAuthenticated() { }
+    public virtual void OnAuthenticated(ActionExecutingContext context) { }
   }
 
   public class ClaimFilterAttribute : AuthFilterAttribute {
@@ -35,7 +35,7 @@ namespace MultiTenancy {
       _logger = logger;
     }
 
-    public override void OnAuthenticated() {
+    public override void OnAuthenticated(ActionExecutingContext context) {
       foreach (var f in _filters) {
         var strs = f.Split(',');
         if (strs.Length != 2) continue;
