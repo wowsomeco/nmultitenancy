@@ -118,16 +118,22 @@ namespace MultiTenancy {
     }
 
     public static bool LetterOrDigitOnly(this string s) {
-      foreach (var c in s) {
-        if (!char.IsLetterOrDigit(c)) return false;
+      if (!s.IsEmpty()) {
+        foreach (var c in s) {
+          if (!char.IsLetterOrDigit(c)) return false;
+        }
       }
+
       return true;
     }
 
     public static bool DigitOnly(this string s) {
-      foreach (var c in s) {
-        if (!char.IsDigit(c)) return false;
+      if (!s.IsEmpty()) {
+        foreach (var c in s) {
+          if (!char.IsDigit(c)) return false;
+        }
       }
+
       return true;
     }
 
