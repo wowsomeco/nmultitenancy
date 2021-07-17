@@ -204,46 +204,55 @@ namespace MultiTenancy {
 
       ImageEntity imageEntity = new ImageEntity { Key = key };
 
-      var resized = await ResizeMulti(file, options);
-      foreach (var r in resized) {
-        var f = await UploadFile(r.Stream, prefix, $"{name}_{r.Width}.jpg", "image/jpeg");
-        imageEntity.Contents.Add(new ImageEntity.Info { Url = f.Url, W = r.Width });
+      var compressedFiles = await CompressMulti(file, options);
+      foreach (var c in compressedFiles) {
+        var f = await UploadFile(c.Stream, prefix, $"{name}_{c.Width}.jpg", "image/jpeg");
+        imageEntity.Contents.Add(new ImageEntity.Info { Url = f.Url, W = c.Width });
       }
 
       return imageEntity;
     }
 
-    public async Task<MemoryStream> Resize(IFormFile file, (int width, int quality) wq) {
-      var memoryStream = new MemoryStream();
+    public async Task<CompressedFile> Compress(IFormFile file, (int width, int quality) wq) {
+      CompressedFile result = new CompressedFile();
+      result.Stream = new MemoryStream();
+
       using (var image = Image.Load(file.OpenReadStream())) {
         var beforeMutations = image.Size();
-        // init resize object
-        var resizeOptions = new ResizeOptions {
-          Size = new Size(Math.Clamp(wq.width, 0, 1024), 0),
-          Sampler = KnownResamplers.Lanczos3,
-          Compand = true,
-          Mode = ResizeMode.Max
-        };
-        // mutate image
-        image.Mutate(x => {
-          if (file.ContentType == MimeTypes.Png) {
-            x.BackgroundColor(Color.White);
-          }
+        int origWidth = beforeMutations.Width;
+        // only shrink if the desired width is less than the origin width OR
+        // quality is below 100
+        if (wq.width < origWidth || wq.quality < 100) {
+          result.Width = Math.Clamp(Math.Min(wq.width, origWidth), 0, 1024);
+          // init resize object
+          var resizeOptions = new ResizeOptions {
+            Size = new Size(result.Width, 0),
+            Sampler = KnownResamplers.Lanczos3,
+            Compand = true,
+            Mode = ResizeMode.Max
+          };
+          // mutate image
+          image.Mutate(x => {
+            // if it's a png, add white background color to replace the transparent area
+            if (file.ContentType == MimeTypes.Png) {
+              x.BackgroundColor(Color.White);
+            }
 
-          x.Resize(resizeOptions);
-        });
-        await image.SaveAsync(memoryStream, new JpegEncoder { Quality = wq.quality });
+            x.Resize(resizeOptions);
+          });
+          await image.SaveAsync(result.Stream, new JpegEncoder { Quality = wq.quality });
+        }
 
-        return memoryStream;
+        return result;
       }
     }
 
-    public async Task<List<CompressedFile>> ResizeMulti(IFormFile file, params (int width, int quality)[] options) {
+    public async Task<List<CompressedFile>> CompressMulti(IFormFile file, params (int width, int quality)[] options) {
       var streams = new List<CompressedFile>();
 
       foreach (var wq in options) {
-        var ms = await Resize(file, wq);
-        streams.Add(new CompressedFile { Stream = ms, Width = wq.width });
+        var ms = await Compress(file, wq);
+        streams.Add(ms);
       }
 
       return streams;
