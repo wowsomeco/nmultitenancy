@@ -4,15 +4,15 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace MultiTenancy {
   public class AuthFilterAttribute : ActionFilterAttribute {
-    private readonly ApplicationContext _appContext;
+    private readonly JwtService _jwtService;
     private JwtSecurityToken _jwtToken = null;
 
-    public AuthFilterAttribute(ApplicationContext appContext) {
-      _appContext = appContext;
+    public AuthFilterAttribute(JwtService jwt) {
+      _jwtService = jwt;
     }
 
     public override void OnActionExecuting(ActionExecutingContext context) {
-      if (_appContext.ValidateToken(out _jwtToken)) {
+      if (_jwtService.ValidateToken(out _jwtToken)) {
         OnAuthenticated(context);
       }
     }
@@ -30,7 +30,7 @@ namespace MultiTenancy {
     private string[] _filters;
     private readonly ILogHandler _logger;
 
-    public ClaimFilterAttribute(ApplicationContext appContext, ILogHandler logger, string[] filters) : base(appContext) {
+    public ClaimFilterAttribute(JwtService jwt, ILogHandler logger, string[] filters) : base(jwt) {
       _filters = filters;
       _logger = logger;
     }

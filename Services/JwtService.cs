@@ -6,23 +6,56 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace MultiTenancy {
   public class JwtService {
-    public int ExpiredDays { get; set; } = 7;
+    public int? ExpiredDays {
+      get {
+        string expired = _appContext.Config[$"{_jwtPrefix}:ExpiredDays"];
+        return expired.IsEmpty() ? null : int.Parse(expired);
+      }
+    }
+    public string SecretKey => _appContext.Config[$"{_jwtPrefix}:Secret"];
+    public string AuthToken => _appContext.AuthToken;
 
-    private readonly string _secretKey;
+    private readonly string _jwtPrefix = "Jwt";
+    private readonly ApplicationContext _appContext;
 
-    // TODO: add this as a singleton, so that we can get the AppConfig to set the DbSchema as one of the claims.
-    // to make it unique across other multitenancy projects
-    public JwtService(string secretKey) {
-      _secretKey = secretKey;
+    public JwtService(ApplicationContext appContext) {
+      _appContext = appContext;
+    }
+
+    public bool ValidateToken(out JwtSecurityToken jwtToken) {
+      SecurityToken validatedToken = null;
+      var securityKey = new SymmetricSecurityKey(SecretKey.ToBytes());
+      var tokenHandler = new JwtSecurityTokenHandler();
+      var authToken = _appContext.AuthToken ?? throw HttpException.BadRequest("Can not find Auth token in the request header");
+
+      try {
+        tokenHandler.ValidateToken(
+          authToken.Replace("Bearer ", ""),
+          new TokenValidationParameters {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = securityKey
+          },
+          out validatedToken
+        );
+
+        jwtToken = validatedToken as JwtSecurityToken;
+      } catch {
+        throw HttpException.Unauthorized("Invalid Auth token");
+      }
+
+      return true;
     }
 
     public string Generate(params (string key, string value)[] claims) {
-      var securityKey = new SymmetricSecurityKey(_secretKey.ToBytes());
+      var securityKey = new SymmetricSecurityKey(SecretKey.ToBytes());
       var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
       var tokenDescriptor = new SecurityTokenDescriptor {
         Subject = new ClaimsIdentity(ToClaims(claims)),
-        Expires = DateTime.UtcNow.AddDays(ExpiredDays),
+        Expires = ExpiredDays != null ? DateTime.UtcNow.AddDays(ExpiredDays.Value) : null,
         SigningCredentials = credentials
       };
 
