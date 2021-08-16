@@ -12,10 +12,12 @@ namespace MultiTenancy {
   where T : class, IEnumEntity, new()
   where TDbContext : TenantDbContext {
     private readonly TenantRepository<T, TDbContext> _repo;
+    private readonly ApplicationContext _appContext;
     private readonly LocalCacheService _cache;
 
-    public EnumsController(TenantRepository<T, TDbContext> repo, LocalCacheService cache) {
+    public EnumsController(TenantRepository<T, TDbContext> repo, ApplicationContext appContext, LocalCacheService cache) {
       _repo = repo;
+      _appContext = appContext;
       _cache = cache;
     }
 
@@ -141,7 +143,7 @@ namespace MultiTenancy {
       string id = body.Name.ToUnderscoreLower();
 
       var result = await _repo.Insert(
-        body.ToEntity<T>(),
+        body.ToEntity<T>(_appContext.TenantHostname),
         e =>
           !Utils.If(
             _repo.Table.AlreadyExists(x => x.Id == id),
