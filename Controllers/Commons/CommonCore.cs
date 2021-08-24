@@ -9,12 +9,4 @@ namespace MultiTenancy {
     public List<T> Data { get; set; }
     public int Count { get; set; }
   }
-
-  public class InsertCondition<TEntity, TInsert> {
-    public delegate bool Reject(TEntity e, TInsert model);
-    public delegate HttpException Reason(TInsert model);
-
-    public Reject RejectWhen { get; set; }
-    public Reason RejectReason { get; set; }
-  }
 }

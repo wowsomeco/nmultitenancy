@@ -79,5 +79,18 @@ namespace MultiTenancy {
 
       return ruleBuilder.NotNull().WithMessage(errMsg).NotEmpty().WithMessage(errMsg);
     }
+
+    public static IRuleBuilderOptions<T, int?> Between<T>(this IRuleBuilder<T, int?> ruleBuilder, int min, int max) {
+      var rule = ruleBuilder.Must(x => x >= min && x <= max)
+        .WithMessage("{PropertyName} must be between " + $"{min} and {max}");
+
+      return rule;
+    }
+
+    public static IRuleBuilderOptions<T, int?> ValidPositiveInt<T>(this IRuleBuilder<T, int?> ruleBuilder) {
+      var rule = ruleBuilder.Between(0, 999999999);
+
+      return rule;
+    }
   }
 }

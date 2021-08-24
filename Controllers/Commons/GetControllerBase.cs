@@ -8,50 +8,30 @@ using Microsoft.EntityFrameworkCore;
 namespace MultiTenancy {
   [ApiController]
   [Route("[controller]")]
-  public abstract class GetControllerBase<TEntityIdType, TEntity, TGet, TDbContext> : ControllerBase
+  public abstract class GetControllerBase<TEntityIdType, TEntity, TGet, TQuery, TDbContext> : ControllerBase
   where TEntityIdType : IComparable
   where TEntity : class, IEntityHasId<TEntityIdType>
+  where TQuery : QueryModel
   where TDbContext : TenantDbContext {
     public Action OnGet { get; protected set; }
+    public string EntityName => typeof(TEntity).Name.Replace("Entity", "");
 
     protected readonly TenantRepository<TEntity, TDbContext> _repo;
+    protected abstract Task<List<TGet>> GetAllWhere(TQuery query);
     protected abstract TGet MapFromEntity(TEntity e);
 
     public GetControllerBase(TenantRepository<TEntity, TDbContext> repo) {
       _repo = repo;
     }
 
-    protected string EntityName => typeof(TEntity).Name.Replace("Entity", "");
-
-    protected virtual void PreGetAll(QueryModel query = null) {
-      if (null != query) _repo.AfterFilter += q => query.ToQueryable(q);
-    }
-
     /// <summary>
-    /// Get all items
-    /// </summary>            
-    [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] QueryModel query) {
-      OnGet?.Invoke();
-      PreGetAll(query);
-
-      var result = await _repo.GetAll(
-        e => MapFromEntity(e)
-      );
-      return Ok(result);
-    }
-
-    /// <summary>
-    /// Get all with count
+    /// Get all with count.
     /// </summary>            
     [HttpGet("with/count")]
-    public async Task<IActionResult> GetAllWithCount([FromQuery] QueryModel query) {
-      OnGet?.Invoke();
-      PreGetAll();
+    [TenantHeader]
+    public async Task<IActionResult> GetAllWithCount([FromQuery] TQuery query) {
       // get all the result first without the limit and offset
-      List<TGet> result = await _repo.GetAll(
-        e => MapFromEntity(e)
-      );
+      List<TGet> result = await GetAllWhere(query);
       int count = result.Count;
       // perform the limit and offset stuff here
       var filtered = result;
@@ -67,12 +47,26 @@ namespace MultiTenancy {
     }
 
     /// <summary>
-    /// Get item by id.
+    /// Get all
+    /// </summary>            
+    [HttpGet]
+    [TenantHeader]
+    public async Task<IActionResult> GetAll([FromQuery] QueryModel query) {
+      _repo.AfterFilter += q => query.ToQueryable(q);
+
+      var result = await _repo.GetAll(
+        e => MapFromEntity(e)
+      );
+
+      return Ok(result);
+    }
+
+    /// <summary>
+    /// Get by id.
     /// </summary>            
     [HttpGet("{id}")]
+    [TenantHeader]
     public async Task<IActionResult> GetById(TEntityIdType id) {
-      OnGet?.Invoke();
-
       var result = await _repo.GetOne(
         e => MapFromEntity(e),
         () => EntityName,
@@ -82,9 +76,10 @@ namespace MultiTenancy {
     }
 
     /// <summary>
-    /// Get Total of items in the database
+    /// Get Count in the database
     /// </summary>            
     [HttpGet("count")]
+    [TenantHeader]
     [ProducesJson(typeof(CountResponse))]
     public async Task<IActionResult> Count() {
       return Ok(new CountResponse { Count = await _repo.Table.CountAsync() });

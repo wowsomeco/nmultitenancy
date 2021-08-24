@@ -61,13 +61,11 @@ namespace MultiTenancy {
     public void Apply(OpenApiOperation operation, OperationFilterContext context) {
       operation.Parameters ??= new List<OpenApiParameter>();
       if (context.MethodInfo.GetCustomAttribute(typeof(TenantHeaderAttribute)) is TenantHeaderAttribute attribute) {
-        var existingParam = operation.Parameters.FirstOrDefault(p =>
-                        p.In == ParameterLocation.Header);
+        var existingParam = operation.Parameters.FirstOrDefault(p => p.In == ParameterLocation.Header);
         // remove description from [FromHeader] argument attribute
         if (existingParam != null) {
           operation.Parameters.Remove(existingParam);
         }
-
         // NOTE: comment 'Required' out for now since when it's set to true, the Swagger UI wont work at all even when the field is filled already.
         // TODO: look into Swashbuckle on github...
         operation.Parameters.Add(new OpenApiParameter {
