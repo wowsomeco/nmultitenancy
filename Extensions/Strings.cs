@@ -56,6 +56,8 @@ namespace MultiTenancy {
     }
 
     public static bool CompareStandard(this string str, string other) {
+      if (str.IsEmpty() || other.IsEmpty()) return false;
+
       return str.Standardize() == other.Standardize();
     }
 
