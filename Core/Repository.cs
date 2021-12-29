@@ -139,7 +139,11 @@ namespace MultiTenancy {
     }
 
     public async Task<int> UpdateAndSave(TEntity e) {
+      // auto update the updated at column
+      e.TryCastTo<TEntity, IEntity>(ent => ent.UpdatedAt = DateTime.Now);
+
       _table.Attach(e);
+
       return await Save();
     }
 

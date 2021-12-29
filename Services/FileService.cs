@@ -180,7 +180,6 @@ namespace MultiTenancy {
       // otherwise EF wont save it since it somehow thinks that nothing gets changed, 
       // prolly bcause it thinks the reference of the list is still the same, hence ignored.
       entity.Documents = new List<FileEntity>(entity.Documents);
-      entity.UpdatedAt = DateTime.Now;
 
       await repo.UpdateAndSave(entity);
 
