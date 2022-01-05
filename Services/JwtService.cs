@@ -34,7 +34,7 @@ namespace MultiTenancy {
           new TokenValidationParameters {
             ValidateIssuer = false,
             ValidateAudience = false,
-            ValidateLifetime = true,
+            ValidateLifetime = ExpiredDays != null,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = securityKey
           },
