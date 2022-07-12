@@ -109,12 +109,12 @@ namespace MultiTenancy {
 
     public async Task<TEntity> Update(UpdateCallback<TEntity> callback, Func<string> onNotFound, params Expression<Func<TEntity, bool>>[] filters) {
       var entity = await GetOne(e => e, onNotFound, filters);
+      // save to the database and return the entity
+      _table.Attach(entity);
       // gets called so the caller can update this cur entity accordingly
       callback(entity);
       // auto update the updated at column
       entity.TryCastTo<TEntity, IEntity>(ent => ent.UpdatedAt = DateTime.Now);
-      // save to the database and return the entity
-      _table.Attach(entity);
       await Save();
       return entity;
     }
